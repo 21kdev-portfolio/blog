@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { getPostBySlug, getAllPosts } from "../../utils/api";
+import { getPostByID, getAllPosts } from "../../utils/api";
 import Header from "../../components/Header";
 import ContentSection from "../../components/ContentSection";
 import Footer from "../../components/Footer";
@@ -78,10 +78,9 @@ const BlogPost = ({ post }) => {
 };
 
 export async function getStaticProps({ params }) {
-  const post = getPostBySlug(params.slug, [
+  const response = await getPostByID(params.id, [
     "date",
-    "slug",
-    "preview",
+    "id",
     "title",
     "tagline",
     "preview",
@@ -89,23 +88,27 @@ export async function getStaticProps({ params }) {
     "content",
   ]);
 
+  const post = response.data;
+
   return {
     props: {
       post: {
         ...post,
       },
     },
+    revalidate: 10
   };
 }
 
 export async function getStaticPaths() {
-  const posts = getAllPosts(["slug"]);
+  const response = await getAllPosts(["id"]);
+  const posts = response.data;
 
   return {
     paths: posts.map((post) => {
       return {
         params: {
-          slug: post.slug,
+          id: post.id.toString(),
         },
       };
     }),

@@ -1,30 +1,46 @@
-import fs from "fs";
-import matter from "gray-matter";
-import { join } from "path";
-import { v4 as uuidv4 } from "uuid";
 import { getRandomImage } from "../../../utils";
+import {createPost, deletePost} from "../../../utils/api";
 
-export default function handler(req, res) {
-  const postsfolder = join(process.cwd(), `/_posts/${uuidv4()}.md`);
+export default async function handler(req, res) {
   if (process.env.NODE_ENV === "development") {
     if (req.method === "POST") {
-      const data = matter.stringify("# New Blog", {
+      const postData = {
         date: new Date().toISOString(),
-        title: "New Blog",
-        tagline: "Amazing New Blog",
-        preview:
-          "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-        image: getRandomImage(),
-      });
-      fs.writeFileSync(postsfolder, data, (err) => console.error(err));
-      res.status(200).json({ status: "CREATED" });
+        title: req.body.title || "New Blog",
+        tagline: req.body.tagline || "Amazing New Blog",
+        preview: req.body.preview || "Lorem Ipsum is simply dummy text of the printing and typesetting industry...",
+        image: req.body.image || getRandomImage(),
+      };
+      try {
+        const response = await createPost(postData);
+        if (response.success) {
+          res.status(200).json({ status: "CREATED", post: response.data });
+        } else {
+          res.status(400).json({ error: "Failed to create post", details: response.error });
+        }
+      } catch (error) { // 네트워크 오류나 예상치 못한 예외 처리
+        console.error('API request failed:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
     }
     if (req.method === "DELETE") {
-      const deleteFile = join(process.cwd(), `/_posts/${req.body.slug}.md`);
-      fs.unlinkSync(deleteFile);
-      res.status(200).json({ status: "DONE" });
+      // 포스트 데이터 삭제
+      try {
+        const { id } = req.body;
+        const response = await deletePost(id);
+        if (response.success) {
+          res.status(200).json({ status: "DELETED" });
+        } else {
+          res.status(404).json({ error: "Failed to delete post", details: response.error });
+        }
+      } catch (error) {
+        console.error('API request failed:', error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    } else {
+      res.status(405).json({ error: "Method not allowed" });
     }
   } else {
-    res.status(200).json({ name: "This route works in development mode only" });
+    res.status(403).json({ name: "This route works in development mode only" });
   }
 }

@@ -43,7 +43,7 @@ const Blog = ({ posts }) => {
     }
   };
 
-  const deleteBlog = (slug) => {
+  const deleteBlog = (id) => {
     if (process.env.NODE_ENV === "development") {
       fetch("/api/blog", {
         method: "DELETE",
@@ -51,7 +51,7 @@ const Blog = ({ posts }) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          slug,
+          id,
         }),
       }).then(() => {
         router.reload(window.location.pathname);
@@ -85,8 +85,8 @@ const Blog = ({ posts }) => {
                 posts.map((post) => (
                   <div
                     className="cursor-pointer relative"
-                    key={post.slug}
-                    onClick={() => Router.push(`/blog/${post.slug}`)}
+                    key={post.id}
+                    onClick={() => Router.push(`/blog/${post.id}`)}
                   >
                     <img
                       className="w-full h-60 rounded-lg shadow-lg object-cover"
@@ -102,7 +102,7 @@ const Blog = ({ posts }) => {
                       <div className="absolute top-0 right-0">
                         <Button
                           onClick={(e) => {
-                            deleteBlog(post.slug);
+                            deleteBlog(post.id);
                             e.stopPropagation();
                           }}
                           type={"primary"}
@@ -129,8 +129,8 @@ const Blog = ({ posts }) => {
 };
 
 export async function getStaticProps() {
-  const posts = getAllPosts([
-    "slug",
+  const response = await getAllPosts([
+    "id",
     "title",
     "image",
     "preview",
@@ -138,10 +138,13 @@ export async function getStaticProps() {
     "date",
   ]);
 
+  const posts = response.data;
+
   return {
     props: {
       posts: [...posts],
     },
+    revalidate: 10
   };
 }
 
