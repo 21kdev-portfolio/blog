@@ -5,6 +5,8 @@ import TextareaAutosize from "react-textarea-autosize";
 import { useTheme } from "next-themes";
 
 import "react-datepicker/dist/react-datepicker.css";
+import ContentSection from "../ContentSection";
+import SplitPane from "react-split-pane";
 
 const BlogEditor = ({ post, close, refresh }) => {
     const { theme } = useTheme();
@@ -17,7 +19,6 @@ const BlogEditor = ({ post, close, refresh }) => {
         preview: post.preview,
         image: post.image,
     });
-
     const savePost = async () => {
         if (process.env.NODE_ENV === "development") {
             await fetch("/api/blog/edit", {
@@ -148,20 +149,40 @@ const BlogEditor = ({ post, close, refresh }) => {
                 )}
 
                 {currentTabs === "CONTENT" && (
-                    <div className="mt-10">
-                        <div className="flex flex-col items-center">
-                            <label className="w-full text-sx opacity-50">Content</label>
-                            <TextareaAutosize
-                                className="w-full h-auto mt-5 p-4 border hover:border-blue-400 rounded-xl shadow-xl"
-                                value={blogContent}
-                                onChange={(e) => setBlogContent(e.target.value)}
-                            ></TextareaAutosize>
-                        </div>
+                    <div className="mt-10" >
+                        <SplitPane
+                            style={{position: "relative"}}
+                            resizerStyle={{
+                                width: '10px',
+                                height: '100px',
+                                cursor: 'col-resize',
+                                border: '1px solid #000',
+                            }}
+                            split="vertical"
+                            defaultSize="50%"
+                            minSize={100}
+                            maxSize={-100}
+                        >
+                            <div style={{overflow: 'auto', maxHeight: '50%'}}>
+                                <label className="w-full opacity-50 top-0">Content</label>
+                                <TextareaAutosize
+                                    className="w-full h-auto mt-5 p-4 border hover:border-blue-400 rounded-xl shadow-xl"
+                                    value={blogContent}
+                                    onChange={(e) => setBlogContent(e.target.value)}
+                                />
+                            </div>
+                            <div style={{overflow: 'auto', maxHeight: '50%'}}>
+                                <label className="w-full opacity-50 top-0">Preview</label>
+                                <ContentSection className="border" content={blogContent}/>
+                            </div>
+                        </SplitPane>
                     </div>
                 )}
             </div>
         </div>
     );
 };
+
+
 
 export default BlogEditor;

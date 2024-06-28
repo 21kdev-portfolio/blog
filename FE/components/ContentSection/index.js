@@ -23,9 +23,13 @@ const CodeBlock = {
   },
 };
 
-const ContentSection = ({ content }) => {
+const ContentSection = ({ content, className}) => {
+  const defaultClassName = "markdown-class"
   return (
-    <ReactMarkdown components={CodeBlock} className="markdown-class">
+    <ReactMarkdown
+        components={CodeBlock}
+        className={`${defaultClassName} ${className}` || "markdown-class"}
+    >
       {content}
     </ReactMarkdown>
   );
